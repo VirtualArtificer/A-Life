@@ -3,11 +3,39 @@ from typing import List, Dict, Tuple, Any, Union
 import numpy as np
 
 
+# TODO: conventions, terminology and reasonining document
+
 class Brain:
+  def __init__(self,agent):
+    """
+    ## Explicit agent reference on Brain initialization
+
+**Rationale:**
+
+* **Unique relationship:** The Brain component has a unique and tightly coupled relationship with its associated Agent. The Brain requires access to specific Agent properties and methods that wouldn't be relevant to other potential parent objects like "Robot" or "Vat."
+* **Efficiency:** Directly referencing the Agent during Brain initialization avoids the overhead of additional data structures or unnecessary lookups required by other approaches like global mediators or introspection.
+* **Conceptual clarity:** Explicitly referencing the Agent in the Brain's constructor clearly expresses the intended parent-child relationship and minimizes potential confusion for future developers.
+
+**Alternatives considered:**
+
+* Global mediator: Adds unnecessary complexity and reduces efficiency for this specific use case.
+* Introspection: Requires framework support and may not be reliable.
+* Table of parents and children: Overkill for this simple one-to-one relationship.
+
+**Conclusion:**
+
+Explicit agent reference on Brain initialization offers the best balance of simplicity, efficiency, and clarity for this specific scenario.
+"""
+    self.agent = agent
+    
   def simulate(self):
     current_row = {}
     for sensor in self.sensors:
-      # sensor functions are inlined here for speed
+      # sensor needs agent for agent property access (remaining energy, position, etc.)
+      sensor_value = sensor.simulate(self.agent)
+      # convention note: use "_index" suffix to explicitly show this is a sequential integer index (not an obj ref, name, guid, etc.)
+      current_row[sensor.output_column_index] = sensor_value
+      # consider inlining sensor functions here, for speed
       # types of sensors:
         # introspective (organism health, position etc.)
         # entity property
@@ -16,58 +44,11 @@ class Brain:
         # storage (retrieves values set by previous brain simulation passes)
         # constant
         # oscillator (note - different powers of 10ms should be plenty, no need to have every frequency)
-      
-        
-
-class Sensor:
-
-  def __init__(self, data: Dict[str, Any]):
-    self.type = data["type"]
-    self.position = np.array(data["position"])
-    self.sensitivity = data["sensitivity"]
-
-  def evaluate(self, environment: Dict[str, np.ndarray]) -> np.ndarray:
-    field = environment[self.type]
-    sensor_value = field[self.position] * self.sensitivity
-    return sensor_value
-
-class Neuron:
-
-  def __init__(self, data: Dict[str, Any]):
-    self.input_columns = data["input_columns"]
-    self.output_column = data["output_column"]
-    self.function = data["function"]
-    self.parameters = data["parameters"]
-
-class Organism:
-
-  def __init__(self, sensors: List[Sensor], neurons: List[Neuron], output_columns: List[int]):
-    self.sensors = sensors
-    self.neurons = neurons
-    self.output_columns = output_columns
-
-def simulate_brain(organism: Organism, environment: Dict[str, np.ndarray]) -> np.ndarray:
-  current_row = np.zeros(len(organism.neurons))
-
-  for sensor in organism.sensors:
-    sensor_value = sensor.evaluate(environment)
-    current_row[sensor.output_column] = sensor_value
-
-  for neuron in organism.neurons:
-    input_values = [current_row[i] for i in neuron.input_columns]
-    output_value = apply_neuron_function(neuron.function, input_values, neuron.parameters)
-    current_row[neuron.output_column] = output_value
-
-  output_values = current_row[organism.output_columns]
-
-  return output_values
-
-def apply_neuron_function(function: str, input_values: List[float], parameters: List[float]) -> float:
-  if function == "threshold":
-    threshold = parameters[0]
-    return 1.0 if any(i > threshold for i in input_values) else 0.0
-  elif function == "addition":
-    return sum(input_values) + parameters[0]
-  # ...
-
-  raise ValueError(f"Unknown neuron function: {function}")
+    # design note: making NeuronRow a shell object, but functionality should be inlined here for speed if doable
+    for neuron_row in self.neuron_rows:
+      for neuron in neuron_row.neurons:
+        input_values = [current_row.get(i, 0.0) for i in neuron.input_column_indices]
+        output_value = neuron.simulate(input_values)
+        current_row[neuron.output_column_index] = output_value
+    for organ in self.organs:
+      organ.simulate(self.agent)
