@@ -29,6 +29,7 @@ class Brain:
         Explicit agent reference on Brain initialization offers the best balance of simplicity, efficiency, and clarity.
         """
         self.agent = agent
+        self.curent_row = {}
 
     def simulate(self):
         """
@@ -42,7 +43,8 @@ class Brain:
         Note:
         - Consider optimizing specific functionalities for speed.
         """
-        current_row = {}
+        current_row = self.current_row
+        current_row.clear()
         for sensor in self.sensors:
             sensor_value = sensor.simulate(self.agent)
             current_row[sensor.output_column_index] = sensor_value
