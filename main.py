@@ -1,8 +1,10 @@
-from typing import List
+# TODO: move vector stuff to vector module
 
+from typing import DefaultDict
+from collections import defaultdict
 
 # TODO: values are currently defaulted to float, but should be index instead.
-
+Vector = DefaultDict[int, int]
 
 class Sensor:
     pass
@@ -32,7 +34,7 @@ class Brain:
         Explicit agent reference on Brain initialization offers the best balance of simplicity, efficiency, and clarity.
         """
         self.agent = agent
-        self.curent_row = {}
+        self.curent_row = defaultdict(Vector)
 
     def simulate(self):
         """
@@ -54,10 +56,10 @@ class Brain:
 
         for neuron_row in self.neuron_rows:
             for neuron in neuron_row.neurons:
-                input_values = [current_row.get(i, 0.0) for i in neuron.input_column_indices]
+                input_values = [current_row[i] for i in neuron.input_column_indices]
                 output_value = neuron.simulate(input_values)
                 current_row[neuron.output_column_index] = output_value
 
         for organ in self.organs:
-            input_value = current_row.get(organ.input_column_index,0.0)
+            input_value = current_row[organ.input_column_index]
             organ.simulate(input_value,self.agent)
