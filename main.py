@@ -1,6 +1,9 @@
 from typing import List
 
 
+# TODO: values are currently defaulted to float, but should be index instead.
+
+
 class Sensor:
     pass
         # types of sensors:
@@ -56,4 +59,5 @@ class Brain:
                 current_row[neuron.output_column_index] = output_value
 
         for organ in self.organs:
-            organ.simulate(self.agent)
+            input_value = current_row.get(organ.input_column_index,0.0)
+            organ.simulate(input_value,self.agent)
