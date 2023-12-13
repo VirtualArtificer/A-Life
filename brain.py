@@ -17,6 +17,12 @@ class Brain:
         self.agent = agent
         self.curent_row = defaultdict(Vector)
 
+    def sigmoid(self, value):
+        return 1 / (1 + np.exp(-x))
+
+    def rescale(self, value, func, scale):
+        return scale*func(value/scale)
+
     def simulate(self):
         """
         Simulates the brain's functions.
