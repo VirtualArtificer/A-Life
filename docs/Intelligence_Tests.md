@@ -1,1 +1,2 @@
 - Tell LLM to show me something.
+- gain life each time I request species info
